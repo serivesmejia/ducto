@@ -1,11 +1,42 @@
 package com.github.serivesmejia.ducto.test
 
 import com.github.serivesmejia.ducto.Ducto
+import com.github.serivesmejia.ducto.serialization.ParametizedStage
 import com.github.serivesmejia.ducto.RestrictedDucto
+import com.github.serivesmejia.ducto.Stage
+import com.github.serivesmejia.ducto.serialization.DuctoSerializer.toJson
+import com.github.serivesmejia.ducto.serialization.StageParameters
+import kotlinx.serialization.Serializable
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.math.roundToInt
 
 class POC {
+
+    data class NumberParameters(val number: Double = 0.0) : StageParameters()
+
+    class NumberMultiplyBy(params: NumberParameters) : ParametizedStage<NumberParameters, Double, Double>(params) {
+        override fun process(input: Double, parameters: NumberParameters) = input * parameters.number
+    }
+
+    class NumberMultiplyByTwo : Stage<Double, Double> {
+        override fun process(input: Double): Double = input * 2
+    }
+
+    class NumberDivideByTwenty : Stage<Double, Double> {
+        override fun process(input: Double): Double = input / 20
+    }
+
+    @Test
+    fun `Test Serialization`() {
+        val ducto = Ducto<Double, Double>()
+
+        ducto.first(NumberMultiplyBy(NumberParameters(5.0)))
+            .then(NumberMultiplyByTwo())
+            .finally(NumberDivideByTwenty())
+
+        println(ducto.toJson())
+    }
 
     @Test
     fun `Test Unrestricted POC`() {
@@ -21,7 +52,7 @@ class POC {
             "$it, double"
         }
 
-        println(ducto.process(52.8))
+        assertEquals(ducto.process(52.8), "422.4, double")
     }
 
     @Test
@@ -36,7 +67,7 @@ class POC {
             it.roundToInt().toDouble()
         }
 
-        println(ducto.process(999.52))
+        assertEquals(ducto.process(999.52), 1623.0, 0.5)
     }
 
 }

@@ -1,23 +1,23 @@
 package com.github.serivesmejia.ducto
 
-class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out Any, out Any>,
-                                            internal var stage: Stage<I, O>? = null) {
+@Suppress("UNCHECKED_CAST")
+class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out Any, out Any>) {
 
-    private var childScope: DuctoScope<R, out Any, out Any>? = null
+    var stage: Stage<I, O>? = null
+        internal set
 
-    internal fun internalExecute(input: Any): O {
-        return execute(input as I)
-    }
+    var childScope: DuctoScope<R, out Any, out Any>? = null
+        private set
 
-    private fun execute(input: I): O {
+    internal fun execute(input: Any): O {
         if(stage == null) {
             throw IllegalStateException("Stage is not defined for this scope")
         }
 
-        var result: Any = stage!!.process(input)
+        var result: Any = stage!!.process(input as I)
 
         childScope?.let {
-            result = it.internalExecute(result)
+            result = it.execute(result)
         }
 
         return result as O

@@ -1,18 +1,22 @@
 package com.github.serivesmejia.ducto
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+
 open class Ducto<I : Any, O : Any> {
 
-    private var parentScope: DuctoScope<O, out Any, out Any>? = null;
+    internal var parentScope: DuctoScope<O, I, out Any>? = null
 
     internal var hasDeclaredFinally = false
 
+    @Suppress("UNCHECKED_CAST")
     fun process(input: I) : O {
         if(!hasDeclaredFinally) {
             throw IllegalStateException("Can't process before having a \"finally\" stage")
         }
 
         parentScope?.let {
-            return it.internalExecute(input) as O
+            return it.execute(input) as O
         }
 
         throw IllegalStateException("Can't process before having a \"first\" stage")
