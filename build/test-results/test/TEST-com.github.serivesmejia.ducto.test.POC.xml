@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.github.serivesmejia.ducto.test.POC" tests="1" skipped="0" failures="0" errors="0" timestamp="2021-03-04T04:03:46" hostname="EQUIPO-MEJIA" time="0.071">
+  <properties/>
+  <testcase name="poc" classname="com.github.serivesmejia.ducto.test.POC" time="0.071"/>
+  <system-out><![CDATA[422.4, double
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
