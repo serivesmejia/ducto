@@ -14,10 +14,10 @@ class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out A
             throw IllegalStateException("Stage is not defined for this scope")
         }
 
-        var result: Any? = stage?.process(input)
+        var result: Any = stage!!.process(input)
 
         childScope?.let {
-            result = it.internalExecute(result!!)
+            result = it.internalExecute(result)
         }
 
         return result as O

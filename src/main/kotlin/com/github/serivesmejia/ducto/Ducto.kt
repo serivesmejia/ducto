@@ -1,6 +1,6 @@
 package com.github.serivesmejia.ducto
 
-class Ducto<I : Any, O : Any> {
+open class Ducto<I : Any, O : Any> {
 
     private var parentScope: DuctoScope<O, out Any, out Any>? = null;
 
