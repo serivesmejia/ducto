@@ -1,8 +1,5 @@
 package com.github.serivesmejia.ducto
 
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-
 open class Ducto<I : Any, O : Any> {
 
     internal var parentScope: DuctoScope<O, I, out Any>? = null

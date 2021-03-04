@@ -1,52 +1,59 @@
 package com.github.serivesmejia.ducto.serialization
 
+import com.beust.klaxon.Klaxon
+import com.beust.klaxon.TypeAdapter
 import com.github.serivesmejia.ducto.Ducto
 import com.github.serivesmejia.ducto.Stage
-import kotlinx.serialization.PolymorphicSerializer
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlin.reflect.cast
+import kotlin.reflect.KClass
 
 object DuctoSerializer {
 
     fun Ducto<*, *>.toJson(): String {
-        return Json { prettyPrint = true }.encodeToString(getDataFrom(this))
+        return Klaxon().toJsonString(this.data)
     }
 
-    fun getDataFrom(ducto: Ducto<*, *>) : DuctoData {
-        val parentScopeData = DuctoScopeData(ducto.parentScope!!.stage!!::class.qualifiedName!!)
-        var currentScopeData = parentScopeData
+    val Ducto<*, *>.data: DuctoData
+        get() {
+            val parentScopeData = DuctoScopeData(parentScope!!.stage!!::class.qualifiedName!!)
+            var currentScopeData = parentScopeData
 
-        checkStageParameters(ducto.parentScope!!.stage!!, parentScopeData)
+            checkStageParameters(parentScope!!.stage!!, parentScopeData)
 
-        var currentScope = ducto.parentScope!!
+            var currentScope = parentScope!!
 
-        while(currentScope.childScope != null) {
-            val it = currentScope.childScope!!
+            while (currentScope.childScope != null) {
+                val it = currentScope.childScope!!
 
-            if(it.stage != null) {
-                val scopeData = DuctoScopeData(it.stage!!::class.qualifiedName!!)
+                if (it.stage != null) {
+                    val scopeData = DuctoScopeData(it.stage!!::class.java.typeName)
 
-                checkStageParameters(it.stage!!, scopeData)
+                    checkStageParameters(it.stage!!, scopeData)
 
-                currentScopeData.childScopeData = scopeData
-                currentScopeData = scopeData
+                    currentScopeData.childScopeData = scopeData
+                    currentScopeData = scopeData
 
-                currentScope = it
-            } else {
-                break
+                    currentScope = it
+                } else {
+                    break
+                }
             }
+
+            return DuctoData(parentScopeData)
         }
 
-        return DuctoData(parentScopeData)
-    }
+    fun parseJsonToDuctoData(json: String) = Klaxon().parse<DuctoData>(json)
 
     private fun checkStageParameters(stage: Stage<out Any, out Any>, scopeData: DuctoScopeData) {
-        if(stage is ParametizedStage<*, *, *>) {
-            scopeData.stageParametersClassName = stage.params::class.qualifiedName
-            scopeData.stageParameters = stage.params::class.cast(stage.params)
+        if (stage is ParametizedStage<*, *, *>) {
+            stage.params.defineType()
+            scopeData.stageParameters = stage.params
+        }
+    }
+
+    class StageParametersAdapter : TypeAdapter<StageParameters> {
+        override fun classFor(type: Any): KClass<out StageParameters> {
+            val typeName = type as String
+            return Class.forName(typeName).kotlin as KClass<out StageParameters>
         }
     }
 

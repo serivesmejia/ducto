@@ -1,9 +1,13 @@
 package com.github.serivesmejia.ducto.serialization
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.beust.klaxon.TypeFor
 
-@Serializable
-sealed class Parameters
+@TypeFor(field = "type", adapter = DuctoSerializer.StageParametersAdapter::class)
+open class StageParameters {
+    var type = ""
+        internal set
 
-open class StageParameters : Parameters()
+    internal fun defineType() {
+        type = this::class.java.typeName
+    }
+}

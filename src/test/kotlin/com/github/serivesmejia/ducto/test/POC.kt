@@ -4,9 +4,9 @@ import com.github.serivesmejia.ducto.Ducto
 import com.github.serivesmejia.ducto.serialization.ParametizedStage
 import com.github.serivesmejia.ducto.RestrictedDucto
 import com.github.serivesmejia.ducto.Stage
+import com.github.serivesmejia.ducto.serialization.DuctoSerializer
 import com.github.serivesmejia.ducto.serialization.DuctoSerializer.toJson
 import com.github.serivesmejia.ducto.serialization.StageParameters
-import kotlinx.serialization.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.math.roundToInt
@@ -35,7 +35,12 @@ class POC {
             .then(NumberMultiplyByTwo())
             .finally(NumberDivideByTwenty())
 
-        println(ducto.toJson())
+        val json = ducto.toJson()
+        println(json)
+
+        val data = DuctoSerializer.parseJsonToDuctoData(json)!!
+
+        println(data)
     }
 
     @Test
