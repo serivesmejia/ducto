@@ -1,7 +1,7 @@
 package com.github.serivesmejia.ducto
 
 class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out Any, out Any>,
-                                   internal var stage: Stage<I, O>? = null) {
+                                            internal var stage: Stage<I, O>? = null) {
 
     private var childScope: DuctoScope<R, out Any, out Any>? = null
 
@@ -10,7 +10,12 @@ class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out A
     }
 
     private fun execute(input: I): O {
+        if(stage == null) {
+            throw IllegalStateException("Stage is not defined for this scope")
+        }
+
         var result: Any? = stage?.process(input)
+
         childScope?.let {
             result = it.internalExecute(result!!)
         }
@@ -29,6 +34,8 @@ class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out A
     fun finally(stage: Stage<O, R>) {
         val scope = DuctoScope<R, O, R>(parentDucto)
         scope.stage = stage
+
+        parentDucto.hasDeclaredFinally = true
 
         childScope = scope
     }

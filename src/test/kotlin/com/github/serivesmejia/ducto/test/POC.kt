@@ -1,7 +1,6 @@
 package com.github.serivesmejia.ducto.test
 
 import com.github.serivesmejia.ducto.Ducto
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class POC {

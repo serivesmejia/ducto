@@ -4,11 +4,18 @@ class Ducto<I : Any, O : Any> {
 
     private var parentScope: DuctoScope<O, out Any, out Any>? = null;
 
+    internal var hasDeclaredFinally = false
+
     fun process(input: I) : O {
+        if(!hasDeclaredFinally) {
+            throw IllegalStateException("Can't process before having a \"finally\" stage")
+        }
+
         parentScope?.let {
             return it.internalExecute(input) as O
         }
-        throw IllegalStateException("Can't process before having a first stage")
+
+        throw IllegalStateException("Can't process before having a \"first\" stage")
     }
 
     fun <o : Any> first(stage: Stage<I, o>): DuctoScope<O, I, o> {
