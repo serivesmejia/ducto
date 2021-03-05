@@ -2,21 +2,20 @@ package com.github.serivesmejia.ducto
 
 open class Ducto<I : Any, O : Any> {
 
-    internal var parentScope: DuctoScope<O, I, out Any>? = null
+    var parentScope: DuctoScope<O, I, out Any>? = null
 
     internal var hasDeclaredFinally = false
 
     @Suppress("UNCHECKED_CAST")
     fun process(input: I) : O {
-        if(!hasDeclaredFinally) {
-            throw IllegalStateException("Can't process before having a \"finally\" stage")
-        }
+        validate()
 
         parentScope?.let {
             return it.execute(input) as O
         }
 
-        throw IllegalStateException("Can't process before having a \"first\" stage")
+        //Unreachable, just so that the compiler doesn't complain
+        throw IllegalStateException()
     }
 
     fun <o : Any> first(stage: Stage<I, o>): DuctoScope<O, I, o> {
@@ -25,6 +24,15 @@ open class Ducto<I : Any, O : Any> {
 
         parentScope = scope
         return scope
+    }
+
+    internal fun validate() {
+        if(!hasDeclaredFinally) {
+            throw IllegalStateException("Can't process or serialize before having a \"finally\" stage")
+        }
+        if(parentScope == null) {
+            throw IllegalStateException("Can't process or serialize before having a \"first\" stage")
+        }
     }
 
 }

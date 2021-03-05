@@ -4,10 +4,8 @@ package com.github.serivesmejia.ducto
 class DuctoScope<R : Any, I : Any, O : Any>(private val parentDucto: Ducto<out Any, out Any>) {
 
     var stage: Stage<I, O>? = null
-        internal set
 
     var childScope: DuctoScope<R, out Any, out Any>? = null
-        private set
 
     internal fun execute(input: Any): O {
         if(stage == null) {

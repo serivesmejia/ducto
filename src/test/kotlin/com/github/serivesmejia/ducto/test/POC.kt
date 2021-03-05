@@ -6,6 +6,7 @@ import com.github.serivesmejia.ducto.RestrictedDucto
 import com.github.serivesmejia.ducto.Stage
 import com.github.serivesmejia.ducto.serialization.DuctoSerializer
 import com.github.serivesmejia.ducto.serialization.DuctoSerializer.data
+import com.github.serivesmejia.ducto.serialization.DuctoSerializer.toDucto
 import com.github.serivesmejia.ducto.serialization.DuctoSerializer.toJson
 import com.github.serivesmejia.ducto.serialization.StageParameters
 import org.junit.Assert.assertEquals
@@ -39,7 +40,10 @@ class POC {
         val data = ducto.data
 
         val json = ducto.toJson()
+        println(json)
+
         val parsedData = DuctoSerializer.parseJsonToDuctoData(json)!!
+        parsedData.toDucto<Double, Double>()
 
         assertEquals(data, parsedData)
     }
