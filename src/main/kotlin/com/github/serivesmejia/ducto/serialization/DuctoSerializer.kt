@@ -5,8 +5,11 @@ import com.beust.klaxon.TypeAdapter
 import com.github.serivesmejia.ducto.Ducto
 import com.github.serivesmejia.ducto.DuctoScope
 import com.github.serivesmejia.ducto.Stage
+import com.github.serivesmejia.ducto.serialization.exception.IllegalDuctoDataException
+import java.util.*
 import kotlin.reflect.KClass
 
+@Suppress("UNCHECKED_CAST")
 object DuctoSerializer {
 
     fun Ducto<*, *>.toJson(): String {
@@ -17,7 +20,7 @@ object DuctoSerializer {
         get() {
             validate()
 
-            val parentScopeData = DuctoScopeData(parentScope!!.stage!!::class.java.typeName)
+            val parentScopeData = DuctoScopeData(parentScope!!.stage!!::class.java.typeName, parentScope!!.part)
             var currentScopeData = parentScopeData
 
             checkStageParameters(parentScope!!.stage!!, parentScopeData)
@@ -28,7 +31,7 @@ object DuctoSerializer {
                 val it = currentScope.childScope!!
 
                 if (it.stage != null) {
-                    val scopeData = DuctoScopeData(it.stage!!::class.java.typeName)
+                    val scopeData = DuctoScopeData(it.stage!!::class.java.typeName, it.part)
 
                     checkStageParameters(it.stage!!, scopeData)
 
@@ -46,7 +49,9 @@ object DuctoSerializer {
 
     fun parseJsonToDuctoData(json: String) = Klaxon().parse<DuctoData>(json)
 
-    inline fun <reified I : Any, reified O : Any> DuctoData.toDucto(): Ducto<I, O> {
+    fun <I : Any, O : Any> parseJsonToDucto(json: String) = parseJsonToDuctoData(json)?.toDucto<I, O>()
+
+    fun < I : Any,  O : Any> DuctoData.toDucto(): Ducto<I, O>? {
 
         val ducto = Ducto<I, O>()
 
@@ -59,6 +64,10 @@ object DuctoSerializer {
             val childData = currentScopeData.childScopeData!!
             val childScope = childData.toScope<O, Any, Any>(ducto)
 
+            if(childScope.part == DuctoScope.Part.FINALLY) {
+                ducto.hasDeclaredFinally = true
+            }
+
             currentScope.childScope = childScope
             currentScope = childScope
             currentScopeData = childData
@@ -66,20 +75,36 @@ object DuctoSerializer {
 
         ducto.parentScope = firstScope as DuctoScope<O, I, out Any>
 
+        ducto.validate()
+
         return ducto
     }
 
-    inline fun <reified R : Any, reified I : Any, reified O : Any> DuctoScopeData.toScope(parentDucto: Ducto<out Any, R>): DuctoScope<R, I, O> {
+    fun <R : Any, I : Any, O : Any> DuctoScopeData.toScope(parentDucto: Ducto<out Any, R>): DuctoScope<R, I, O> {
         val scope = DuctoScope<R, I, O>(parentDucto)
         val stageClass = Class.forName(stageClassName)
 
         if(stageParameters != null) {
-            val constructor = stageClass.getConstructor(stageParameters!!::class.java)
-            scope.stage = constructor.newInstance(stageParameters!!) as Stage<I, O>
+            try {
+                val constructor = stageClass.getConstructor(stageParameters!!::class.java)
+                scope.stage = constructor.newInstance(stageParameters!!) as Stage<I, O>
+            } catch(ex: NoSuchMethodException) {
+                throw IllegalDuctoDataException(
+                    "Stage class ${stageClass.name} should implement a constructor with a single parameter of type ${stageParameters!!::class.java.name}"
+                )
+            }
         } else {
-            val constructor = stageClass.getConstructor()
-            scope.stage = constructor.newInstance() as Stage<I, O>
+            try {
+                val constructor = stageClass.getConstructor()
+                scope.stage = constructor.newInstance() as Stage<I, O>
+            } catch(ex: NoSuchMethodException) {
+                throw IllegalDuctoDataException(
+                    "Stage class ${stageClass.name} should implement a constructor with no parameters"
+                )
+            }
         }
+
+        scope.part = scopePart
 
         return scope
     }

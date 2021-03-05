@@ -3,6 +3,7 @@ package com.github.serivesmejia.ducto
 open class Ducto<I : Any, O : Any> {
 
     var parentScope: DuctoScope<O, I, out Any>? = null
+        internal set
 
     internal var hasDeclaredFinally = false
 
@@ -21,12 +22,13 @@ open class Ducto<I : Any, O : Any> {
     fun <o : Any> first(stage: Stage<I, o>): DuctoScope<O, I, o> {
         val scope = DuctoScope<O, I, o>(this)
         scope.stage = stage
+        scope.part = DuctoScope.Part.FIRST
 
         parentScope = scope
         return scope
     }
 
-    internal fun validate() {
+    fun validate() {
         if(!hasDeclaredFinally) {
             throw IllegalStateException("Can't process or serialize before having a \"finally\" stage")
         }

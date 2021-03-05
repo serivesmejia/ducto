@@ -43,9 +43,10 @@ class POC {
         println(json)
 
         val parsedData = DuctoSerializer.parseJsonToDuctoData(json)!!
-        parsedData.toDucto<Double, Double>()
+        val parsedDucto = parsedData.toDucto<Double, Double>()
 
         assertEquals(data, parsedData)
+        assertEquals(ducto.process(444.0), parsedDucto!!.process(444.0), 0.5)
     }
 
     @Test
