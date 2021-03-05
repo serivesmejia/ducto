@@ -5,6 +5,7 @@ import com.github.serivesmejia.ducto.serialization.ParametizedStage
 import com.github.serivesmejia.ducto.RestrictedDucto
 import com.github.serivesmejia.ducto.Stage
 import com.github.serivesmejia.ducto.serialization.DuctoSerializer
+import com.github.serivesmejia.ducto.serialization.DuctoSerializer.data
 import com.github.serivesmejia.ducto.serialization.DuctoSerializer.toJson
 import com.github.serivesmejia.ducto.serialization.StageParameters
 import org.junit.Assert.assertEquals
@@ -16,7 +17,7 @@ class POC {
     data class NumberParameters(val number: Double = 0.0) : StageParameters()
 
     class NumberMultiplyBy(params: NumberParameters) : ParametizedStage<NumberParameters, Double, Double>(params) {
-        override fun process(input: Double, parameters: NumberParameters) = input * parameters.number
+        override fun process(input: Double, params: NumberParameters) = input * params.number
     }
 
     class NumberMultiplyByTwo : Stage<Double, Double> {
@@ -28,19 +29,19 @@ class POC {
     }
 
     @Test
-    fun `Test Serialization`() {
+    fun `Test Serialization POC`() {
         val ducto = Ducto<Double, Double>()
 
         ducto.first(NumberMultiplyBy(NumberParameters(5.0)))
             .then(NumberMultiplyByTwo())
             .finally(NumberDivideByTwenty())
 
+        val data = ducto.data
+
         val json = ducto.toJson()
-        println(json)
+        val parsedData = DuctoSerializer.parseJsonToDuctoData(json)!!
 
-        val data = DuctoSerializer.parseJsonToDuctoData(json)!!
-
-        println(data)
+        assertEquals(data, parsedData)
     }
 
     @Test
